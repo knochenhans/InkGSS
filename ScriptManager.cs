@@ -81,7 +81,7 @@ public partial class ScriptActionMoveObjectBy : ScriptObjectControllerAction
 
 	public async override Task Execute()
 	{
-		GD.Print($"Moving object by {TargetPositionDelta}");
+		GD.Print($"Moving object with ID {ObjectControllerID} by {TargetPositionDelta}");
 
 		var scriptObjectController = GetScriptObjectController();
 
@@ -98,7 +98,7 @@ public partial class ScriptActionMoveObjectTo : ScriptObjectControllerAction
 
 	public async override Task Execute()
 	{
-		GD.Print($"Moving object to {TargetPosition}");
+		GD.Print($"Moving object with ID {ObjectControllerID} to {TargetPosition}");
 
 		var scriptObjectController = GetScriptObjectController();
 

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://c8rrduu8ylqsm"]
+[gd_scene load_steps=6 format=3 uid="uid://c8rrduu8ylqsm"]
 
 [ext_resource type="Script" path="res://Main.cs" id="1_4mug3"]
 [ext_resource type="Resource" uid="uid://b0b65pp2oinqj" path="res://script.ink" id="2_3l6f1"]
 [ext_resource type="Texture2D" uid="uid://cs8ogfilopmig" path="res://icon.svg" id="3_vs7t8"]
 [ext_resource type="PackedScene" uid="uid://durojd6034q6q" path="res://ScriptObjectController.tscn" id="4_jhaxl"]
+[ext_resource type="Texture2D" uid="uid://op2d8aagi35f" path="res://addons/GodotInk/GodotInk.svg" id="5_y3o08"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_4mug3")
@@ -44,3 +45,12 @@ texture = ExtResource("3_vs7t8")
 
 [node name="ScriptObjectController" parent="Sprite2D" instance=ExtResource("4_jhaxl")]
 ID = "node"
+
+[node name="Node2D" type="Node2D" parent="."]
+position = Vector2(541, 240)
+
+[node name="Sprite2D" type="Sprite2D" parent="Node2D"]
+texture = ExtResource("5_y3o08")
+
+[node name="ScriptObjectController" parent="Node2D" instance=ExtResource("4_jhaxl")]
+ID = "node2"
