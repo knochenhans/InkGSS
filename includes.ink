@@ -1,4 +1,5 @@
 EXTERNAL wait(seconds)
 EXTERNAL print_error(text)
-EXTERNAL print(text)
-EXTERNAL move_object_by(object_name, x, y)
+EXTERNAL print(object_id, text)
+EXTERNAL move_object_by(object_id, x, y)
+EXTERNAL move_object_to(object_id, x, y)

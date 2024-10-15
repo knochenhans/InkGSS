@@ -10,6 +10,35 @@ public partial class AbstractScriptAction : GodotObject
 	public virtual Task Execute() { return Task.CompletedTask; }
 }
 
+public partial class ScriptObjectControllerAction : AbstractScriptAction
+{
+	public Array<ScriptObjectController> ScriptObjectControllers { get; set; }
+	public string ObjectControllerID { get; set; }
+
+	public ScriptObjectControllerAction(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID) : base() { ScriptObjectControllers = scriptObjectControllers; ObjectControllerID = objectControllerID; }
+
+	public ScriptObjectController GetScriptObjectController()
+	{
+		foreach (var scriptObjectController in ScriptObjectControllers)
+			if (scriptObjectController.ID == ObjectControllerID)
+				return scriptObjectController;
+		return null;
+	}
+
+	public override Task Execute()
+	{
+		GD.Print($"Executing action for {ObjectControllerID}");
+
+		var scriptObjectController = GetScriptObjectController();
+
+		if (scriptObjectController != null)
+			GD.Print($"Found script object controller for {ObjectControllerID}");
+
+		return Task.CompletedTask;
+	}
+}
+
+
 public partial class ScriptActionWait : AbstractScriptAction
 {
 	public float Seconds { get; set; }
@@ -22,43 +51,59 @@ public partial class ScriptActionWait : AbstractScriptAction
 	}
 }
 
-public partial class ScriptActionPrint : AbstractScriptAction
+public partial class ScriptActionPrint : ScriptObjectControllerAction
 {
-	[Signal]
-	public delegate void PrintEventHandler(string text);
+	public string Message { get; set; }
 
-	public string Text { get; set; }
+	public ScriptActionPrint(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID, string message) : base(scriptObjectControllers, objectControllerID)
+	{
+		Message = message;
+	}
 
-	public ScriptActionPrint(string text) : base() { Text = text; }
 	public override Task Execute()
 	{
-		// GD.Print(Text);
-		EmitSignal(SignalName.Print, Text);
+		GD.Print($"Printing message: {Message}");
+
+		var scriptObjectController = GetScriptObjectController();
+
+		if (scriptObjectController != null)
+			scriptObjectController.Print(Message);
+
 		return Task.CompletedTask;
 	}
 }
 
-public partial class ScriptActionMoveObjectBy : AbstractScriptAction
+public partial class ScriptActionMoveObjectBy : ScriptObjectControllerAction
 {
-	public Array<ScriptObjectController> ScriptObjectControllers { get; set; }
-	public string ObjectControllerID { get; set; }
-
 	public Vector2 TargetPositionDelta { get; set; }
 
-	public ScriptActionMoveObjectBy(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID, Vector2 targetPositionDelta) : base()
-	{
-		ScriptObjectControllers = scriptObjectControllers;
-		ObjectControllerID = objectControllerID;
-		TargetPositionDelta = targetPositionDelta;
-	}
+	public ScriptActionMoveObjectBy(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID, Vector2 targetPositionDelta) : base(scriptObjectControllers, objectControllerID) => TargetPositionDelta = targetPositionDelta;
 
 	public async override Task Execute()
 	{
-		GD.Print($"Moving {ObjectControllerID} by {TargetPositionDelta}");
+		GD.Print($"Moving object by {TargetPositionDelta}");
 
-		foreach (var scriptObjectController in ScriptObjectControllers)
-			if (scriptObjectController.ID == ObjectControllerID)
-				await scriptObjectController.MoveBy(TargetPositionDelta);
+		var scriptObjectController = GetScriptObjectController();
+
+		if (scriptObjectController != null)
+			await scriptObjectController.MoveBy(TargetPositionDelta);
+	}
+}
+
+public partial class ScriptActionMoveObjectTo : ScriptObjectControllerAction
+{
+	public Vector2 TargetPosition { get; set; }
+
+	public ScriptActionMoveObjectTo(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID, Vector2 targetPosition) : base(scriptObjectControllers, objectControllerID) => TargetPosition = targetPosition;
+
+	public async override Task Execute()
+	{
+		GD.Print($"Moving object to {TargetPosition}");
+
+		var scriptObjectController = GetScriptObjectController();
+
+		if (scriptObjectController != null)
+			await scriptObjectController.MoveTo(TargetPosition);
 	}
 }
 
@@ -79,10 +124,6 @@ public partial class ScriptManager : GodotObject
 	}
 
 	// External Ink functions
-	public Action<string> PrintError;
-	public Action<string> Print;
-	public Action<float> InkWait;
-	public Action<string, float, float> InkMoveObjectBy;
 
 	// Func<string, Variant> InkGetVariable;
 	// Action<string, bool> InkSetVariable;
@@ -90,33 +131,25 @@ public partial class ScriptManager : GodotObject
 
 	public InkStory InkStory { get; set; }
 
-	public ScriptManager(InkStory story, Action<string> print)
+	public ScriptManager(InkStory story)
 	{
 		InkStory = story;
-
-		PrintError = (string message) => GD.PrintErr(message);
-		Print = (string message) =>
-		{
-			ScriptActionPrint action = new ScriptActionPrint(message);
-			action.Print += (string text) => print(text);
-			ActionQueue.Add(action);
-		};
-		InkWait = (float seconds) => ActionQueue.Add(new ScriptActionWait(seconds));
-		InkMoveObjectBy = (objectControllerID, posX, posY) => ActionQueue.Add(new ScriptActionMoveObjectBy(ScriptObjects, objectControllerID, new Vector2(posX, posY)));
 
 		Bind();
 	}
 
 	private void Bind()
 	{
-		InkStory.BindExternalFunction("print_error", PrintError);
-		InkStory.BindExternalFunction("print", Print);
-		InkStory.BindExternalFunction("wait", InkWait);
-		InkStory.BindExternalFunction("move_object_by", InkMoveObjectBy);
+		InkStory.BindExternalFunction("print_error", (string message) => GD.PrintErr(message));
+		InkStory.BindExternalFunction("print", (string objectControllerID, string message) => ActionQueue.Add(new ScriptActionPrint(ScriptObjects, objectControllerID, message)));
+		InkStory.BindExternalFunction("wait", (float seconds) => ActionQueue.Add(new ScriptActionWait(seconds)));
+		InkStory.BindExternalFunction("move_object_by", (string objectControllerID, float posX, float posY) => ActionQueue.Add(new ScriptActionMoveObjectBy(ScriptObjects, objectControllerID, new Vector2(posX, posY))));
+		InkStory.BindExternalFunction("move_object_to", (string objectControllerID, float posX, float posY) => ActionQueue.Add(new ScriptActionMoveObjectTo(ScriptObjects, objectControllerID, new Vector2(posX, posY))));
 	}
 
 	private void Unbind()
 	{
+		InkStory.UnbindExternalFunction("move_object_to");
 		InkStory.UnbindExternalFunction("move_object_by");
 		InkStory.UnbindExternalFunction("wait");
 		InkStory.UnbindExternalFunction("print");

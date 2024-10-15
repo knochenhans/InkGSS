@@ -34,6 +34,10 @@ custom_minimum_size = Vector2(0, 600)
 layout_mode = 2
 autowrap_mode = 2
 
+[node name="ScriptObjectController" parent="CanvasLayer/CenterContainer/VBoxContainer/Output" instance=ExtResource("4_jhaxl")]
+position = Vector2(-171, 72)
+ID = "label"
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(105, 113)
 texture = ExtResource("3_vs7t8")

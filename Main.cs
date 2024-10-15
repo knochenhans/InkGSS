@@ -14,12 +14,11 @@ public partial class Main : Node2D
 
 	public override void _Ready()
 	{
-		ScriptManager = new ScriptManager(InkStory, OnPrint);
-		ScriptManager.Print += OnPrint;
+		ScriptManager = new ScriptManager(InkStory);
 
 		Button.Pressed += OnButtonPressed;
 
-		// Find all nodes of type ScriptObjectController
+		// Find and register all nodes of type ScriptObjectController
 		foreach (Node node in GetTree().GetNodesInGroup("controller"))
 			if (node is ScriptObjectController scriptObjectController)
 				ScriptManager.RegisterScriptObjectController(scriptObjectController);
@@ -30,14 +29,8 @@ public partial class Main : Node2D
 		while (ScriptManager.InkStory.CanContinue)
 		{
 			string storyText = ScriptManager.InkStory.Continue();
-			// Output.Text += $"Story: {storyText}";
 		}
 
 		await ScriptManager.RunActionQueue();
-	}
-
-	public void OnPrint(string text)
-	{
-		Output.Text += $"Script Action: {text}\n";
 	}
 }
