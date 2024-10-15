@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8rrduu8ylqsm"]
+
+[ext_resource type="Script" path="res://Main.cs" id="1_4mug3"]
+[ext_resource type="Resource" uid="uid://b0b65pp2oinqj" path="res://script.ink" id="2_3l6f1"]
+[ext_resource type="Texture2D" uid="uid://cs8ogfilopmig" path="res://icon.svg" id="3_vs7t8"]
+[ext_resource type="PackedScene" uid="uid://durojd6034q6q" path="res://ScriptObjectController.tscn" id="4_jhaxl"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_4mug3")
+InkStory = ExtResource("2_3l6f1")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="CenterContainer" type="CenterContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/CenterContainer"]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="Button" type="Button" parent="CanvasLayer/CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run script"
+
+[node name="Output" type="Label" parent="CanvasLayer/CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 600)
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(105, 113)
+texture = ExtResource("3_vs7t8")
+
+[node name="ScriptObjectController" parent="Sprite2D" instance=ExtResource("4_jhaxl")]
+ID = "node"
