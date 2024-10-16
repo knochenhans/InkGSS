@@ -1,7 +1,6 @@
-using Godot;
 using System;
-using GodotInk;
 using System.Threading.Tasks;
+using Godot;
 using Godot.Collections;
 
 public partial class AbstractScriptAction : GodotObject
@@ -104,60 +103,5 @@ public partial class ScriptActionMoveObjectTo : ScriptObjectControllerAction
 
 		if (scriptObjectController != null)
 			await scriptObjectController.MoveTo(TargetPosition);
-	}
-}
-
-public partial class ScriptManager : GodotObject
-{
-	public Array<AbstractScriptAction> ActionQueue { get; set; } = new Array<AbstractScriptAction>();
-	public Array<ScriptObjectController> ScriptObjects { get; set; } = new Array<ScriptObjectController>();
-
-	public async Task RunActionQueue()
-	{
-		GD.Print($"Running {ActionQueue.Count} actions in queue");
-		foreach (var action in ActionQueue)
-		{
-			// GD.Print($"Running action: {action.GetType()}");
-			await action.Execute();
-		}
-		ActionQueue.Clear();
-	}
-
-	// External Ink functions
-
-	// Func<string, Variant> InkGetVariable;
-	// Action<string, bool> InkSetVariable;
-	// Func<string, Variant> InkGetScriptVisits;
-
-	public InkStory InkStory { get; set; }
-
-	public ScriptManager(InkStory story)
-	{
-		InkStory = story;
-
-		Bind();
-	}
-
-	private void Bind()
-	{
-		InkStory.BindExternalFunction("print_error", (string message) => GD.PrintErr(message));
-		InkStory.BindExternalFunction("print", (string objectControllerID, string message) => ActionQueue.Add(new ScriptActionPrint(ScriptObjects, objectControllerID, message)));
-		InkStory.BindExternalFunction("wait", (float seconds) => ActionQueue.Add(new ScriptActionWait(seconds)));
-		InkStory.BindExternalFunction("move_object_by", (string objectControllerID, float posX, float posY) => ActionQueue.Add(new ScriptActionMoveObjectBy(ScriptObjects, objectControllerID, new Vector2(posX, posY))));
-		InkStory.BindExternalFunction("move_object_to", (string objectControllerID, float posX, float posY) => ActionQueue.Add(new ScriptActionMoveObjectTo(ScriptObjects, objectControllerID, new Vector2(posX, posY))));
-	}
-
-	private void Unbind()
-	{
-		InkStory.UnbindExternalFunction("move_object_to");
-		InkStory.UnbindExternalFunction("move_object_by");
-		InkStory.UnbindExternalFunction("wait");
-		InkStory.UnbindExternalFunction("print");
-		InkStory.UnbindExternalFunction("print_error");
-	}
-
-	public void RegisterScriptObjectController(ScriptObjectController scriptObjectController)
-	{
-		ScriptObjects.Add(scriptObjectController);
 	}
 }

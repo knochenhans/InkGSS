@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://kum6rjafmvq1"]
 
-[ext_resource type="Script" path="res://ScriptObject.cs" id="1_c8w5r"]
-[ext_resource type="PackedScene" uid="uid://durojd6034q6q" path="res://ScriptObjectController.tscn" id="1_mdw22"]
+[ext_resource type="Script" path="res://addons/InkGSS/ScriptObject.cs" id="1_c8w5r"]
+[ext_resource type="PackedScene" uid="uid://durojd6034q6q" path="res://addons/InkGSS/ScriptObjectController.tscn" id="1_mdw22"]
 
 [node name="ScriptObject" type="Node2D"]
 script = ExtResource("1_c8w5r")
