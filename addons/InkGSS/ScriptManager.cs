@@ -9,7 +9,7 @@ public partial class ScriptManager : GodotObject
 	public Array<ScriptObjectController> ScriptObjects { get; set; } = new Array<ScriptObjectController>();
 	public Dictionary<string, Variant> ScriptVariables { get; set; } = new Dictionary<string, Variant>();
 
-	public async Task RunActionQueue()
+	public virtual async Task RunActionQueue()
 	{
 		Logger.Log($"Running {ScriptActionQueue.Count} actions in queue", Logger.LogTypeEnum.Script);
 		foreach (var action in ScriptActionQueue)
@@ -29,15 +29,27 @@ public partial class ScriptManager : GodotObject
 		InkStory = story;
 
 		// Bind default functions
-		BindExternalFunction("wait", new Callable(this, MethodName.Wait));
-		BindExternalFunction("get_game_var", new Callable(this, MethodName.GetGameVar));
-		BindExternalFunction("set_game_var", new Callable(this, MethodName.SetGameVar));
-		BindExternalFunction("print_error", new Callable(this, MethodName.PrintError));
+		var dict = new Dictionary<string, string>
+		{
+			// { "wait", MethodName.Wait },
+			{ "get_game_var", MethodName.GetGameVar },
+			{ "set_game_var", MethodName.SetGameVar },
+			{ "print_error", MethodName.PrintError }
+		};
+
+		foreach (var item in dict)
+			BindExternalFunction(item.Key, new Callable(this, item.Value));
 	}
 
 	public void BindExternalFunction(string functionName, Callable function)
 	{
-		Logger.Log($"Binding external function: {functionName}", Logger.LogTypeEnum.Script);
+		if (ExternalFunctions.ContainsKey(functionName))
+		{
+			InkStory.UnbindExternalFunction(functionName);
+			Logger.Log($"Warning: Overwriting existing external function binding: {functionName}", Logger.LogTypeEnum.Warning);
+		}
+		else
+			Logger.Log($"Binding external function: {functionName}", Logger.LogTypeEnum.Script);
 		ExternalFunctions[functionName] = function;
 		InkStory.BindExternalFunction(functionName, function);
 	}
@@ -62,22 +74,13 @@ public partial class ScriptManager : GodotObject
 		Logger.Log($"Registered script object with parent node: {scriptObjectController.Parent.Name}", Logger.LogTypeEnum.Script);
 	}
 
-	public void QueueAction(AbstractScriptAction scriptAction)
-	{
-		ScriptActionQueue.Add(scriptAction);
-	}
+    public void QueueAction(AbstractScriptAction scriptAction) => ScriptActionQueue.Add(scriptAction);
 
-	public Variant GetStoryVariable(string variableName)
-	{
-		return InkStory.FetchVariable(variableName);
-	}
+    public Variant GetStoryVariable(string variableName) => InkStory.FetchVariable(variableName);
 
-	public void SetStoryVariable(string variableName, Variant value)
-	{
-		InkStory.StoreVariable(variableName, value);
-	}
+    public void SetStoryVariable(string variableName, Variant value) => InkStory.StoreVariable(variableName, value);
 
-	public Variant GetGameVar(string varName)
+    public Variant GetGameVar(string varName)
 	{
 		if (ScriptVariables.ContainsKey(varName))
 			return ScriptVariables[varName];
@@ -92,13 +95,7 @@ public partial class ScriptManager : GodotObject
 			ScriptVariables.Add(varName, value);
 	}
 
-	public void Wait(float seconds)
-	{
-		QueueAction(new ScriptActionWait(seconds));
-	}
+    public void Wait(float seconds) => QueueAction(new ScriptActionWait(seconds));
 
-	public void PrintError(string message)
-	{
-		GD.PrintErr(message);
-	}
+    public void PrintError(string message) => GD.PrintErr(message);
 }

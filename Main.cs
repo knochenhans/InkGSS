@@ -7,10 +7,16 @@ public partial class CustomScriptManager : ScriptManager
 {
 	public CustomScriptManager(InkStory inkStory) : base(inkStory)
 	{
-		BindExternalFunction("print", new Callable(this, MethodName.PrintFunction));
-		BindExternalFunction("move_object_by", new Callable(this, MethodName.MoveObjectByFunction));
-		BindExternalFunction("move_object_to", new Callable(this, MethodName.MoveObjectToFunction));
-		BindExternalFunction("destroy_object", new Callable(this, MethodName.DestroyObjectFunction));
+		var dict = new Dictionary<string, string>
+		{
+			{ "print", MethodName.PrintFunction },
+			{ "move_object_by", MethodName.MoveObjectByFunction },
+			{ "move_object_to", MethodName.MoveObjectToFunction },
+			{ "destroy_object", MethodName.DestroyObjectFunction }
+		};
+
+		foreach (var item in dict)
+			BindExternalFunction(item.Key, new Callable(this, item.Value));
 	}
 
 	public void PrintFunction(string objectControllerID, string message) => QueueAction(new ScriptActionPrint(ScriptObjects, objectControllerID, message));
