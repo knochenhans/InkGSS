@@ -5,19 +5,19 @@ using Godot.Collections;
 
 public partial class ScriptManager : GodotObject
 {
-	public Array<AbstractScriptAction> ActionQueue { get; set; } = new Array<AbstractScriptAction>();
+	public Array<AbstractScriptAction> ScriptActionQueue { get; set; } = new Array<AbstractScriptAction>();
 	public Array<ScriptObjectController> ScriptObjects { get; set; } = new Array<ScriptObjectController>();
 	public Dictionary<string, Variant> ScriptVariables { get; set; } = new Dictionary<string, Variant>();
 
 	public async Task RunActionQueue()
 	{
-		Logger.Log($"Running {ActionQueue.Count} actions in queue", Logger.LogTypeEnum.Script);
-		foreach (var action in ActionQueue)
+		Logger.Log($"Running {ScriptActionQueue.Count} actions in queue", Logger.LogTypeEnum.Script);
+		foreach (var action in ScriptActionQueue)
 		{
 			Logger.Log($"Running action: {action.GetType()}", Logger.LogTypeEnum.Script);
 			await action.Execute();
 		}
-		ActionQueue.Clear();
+		ScriptActionQueue.Clear();
 	}
 
 	public InkStory InkStory { get; set; }
@@ -27,6 +27,12 @@ public partial class ScriptManager : GodotObject
 	public ScriptManager(InkStory story)
 	{
 		InkStory = story;
+
+		// Bind default functions
+		BindExternalFunction("wait", new Callable(this, MethodName.Wait));
+		BindExternalFunction("get_game_var", new Callable(this, MethodName.GetGameVar));
+		BindExternalFunction("set_game_var", new Callable(this, MethodName.SetGameVar));
+		BindExternalFunction("print_error", new Callable(this, MethodName.PrintError));
 	}
 
 	public void BindExternalFunction(string functionName, Callable function)
@@ -38,7 +44,7 @@ public partial class ScriptManager : GodotObject
 
 	public void Cleanup()
 	{
-		ActionQueue.Clear();
+		ScriptActionQueue.Clear();
 		ScriptVariables.Clear();
 		ScriptObjects.Clear();
 
@@ -58,7 +64,7 @@ public partial class ScriptManager : GodotObject
 
 	public void QueueAction(AbstractScriptAction scriptAction)
 	{
-		ActionQueue.Add(scriptAction);
+		ScriptActionQueue.Add(scriptAction);
 	}
 
 	public Variant GetStoryVariable(string variableName)
@@ -71,13 +77,28 @@ public partial class ScriptManager : GodotObject
 		InkStory.StoreVariable(variableName, value);
 	}
 
-	public Variant GetGameVarFunction(string varName)
+	public Variant GetGameVar(string varName)
 	{
-		return ScriptVariables[varName];
+		if (ScriptVariables.ContainsKey(varName))
+			return ScriptVariables[varName];
+		return new Variant();
 	}
 
-	public void SetGameVarFunction(string varName, Variant value)
+	public void SetGameVar(string varName, Variant value)
 	{
-		ScriptVariables[varName] = value;
+		if (ScriptVariables.ContainsKey(varName))
+			ScriptVariables[varName] = value;
+		else
+			ScriptVariables.Add(varName, value);
+	}
+
+	public void Wait(float seconds)
+	{
+		QueueAction(new ScriptActionWait(seconds));
+	}
+
+	public void PrintError(string message)
+	{
+		GD.PrintErr(message);
 	}
 }
