@@ -7,6 +7,7 @@ public partial class ScriptManager : GodotObject
 {
 	public Array<AbstractScriptAction> ActionQueue { get; set; } = new Array<AbstractScriptAction>();
 	public Array<ScriptObjectController> ScriptObjects { get; set; } = new Array<ScriptObjectController>();
+	public Dictionary<string, Variant> ScriptVariables { get; set; } = new Dictionary<string, Variant>();
 
 	public async Task RunActionQueue()
 	{
@@ -37,13 +38,10 @@ public partial class ScriptManager : GodotObject
 
 	public void Cleanup()
 	{
-		// Clear the action queue
 		ActionQueue.Clear();
-
-		// Unregister all script objects
+		ScriptVariables.Clear();
 		ScriptObjects.Clear();
 
-		// Unbind all external functions
 		foreach (var externalFunction in ExternalFunctions)
 		{
 			Logger.Log($"Unbinding external function: {externalFunction.Key}", Logger.LogTypeEnum.Script);
@@ -63,13 +61,23 @@ public partial class ScriptManager : GodotObject
 		ActionQueue.Add(scriptAction);
 	}
 
-	public Variant GetVariable(string variableName)
+	public Variant GetStoryVariable(string variableName)
 	{
 		return InkStory.FetchVariable(variableName);
 	}
 
-	public void SetVariable(string variableName, Variant value)
+	public void SetStoryVariable(string variableName, Variant value)
 	{
 		InkStory.StoreVariable(variableName, value);
+	}
+
+	public Variant GetGameVarFunction(string varName)
+	{
+		return ScriptVariables[varName];
+	}
+
+	public void SetGameVarFunction(string varName, Variant value)
+	{
+		ScriptVariables[varName] = value;
 	}
 }

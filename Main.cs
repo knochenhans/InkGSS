@@ -13,7 +13,8 @@ public partial class CustomScriptManager : ScriptManager
 		BindExternalFunction("move_object_by", new Callable(this, MethodName.MoveObjectByFunction));
 		BindExternalFunction("move_object_to", new Callable(this, MethodName.MoveObjectToFunction));
 		BindExternalFunction("destroy_object", new Callable(this, MethodName.DestroyObjectFunction));
-		BindExternalFunction("get_game_var", new Callable(this, MethodName.GetGameVarFunction));
+		BindExternalFunction("get_game_var", new Callable(this, ScriptManager.MethodName.GetGameVarFunction));
+		BindExternalFunction("set_game_var", new Callable(this, ScriptManager.MethodName.SetGameVarFunction));
 	}
 
 	public void WaitFunction(float seconds)
@@ -45,13 +46,6 @@ public partial class CustomScriptManager : ScriptManager
 	{
 		QueueAction(new ScriptActionDestroyObject(ScriptObjects, objectControllerID));
 	}
-
-	public string GetGameVarFunction(string varName)
-	{
-		if (varName == "test_var")
-			return "okay";
-		return "not okay";
-	}
 }
 
 public partial class Main : Node2D
@@ -73,6 +67,9 @@ public partial class Main : Node2D
 		foreach (Node node in GetTree().GetNodesInGroup("controller"))
 			if (node is ScriptObjectController scriptObjectController)
 				ScriptManager.RegisterScriptObject(scriptObjectController);
+
+		ScriptManager.ScriptVariables["test_var1"] = "okay";
+		ScriptManager.ScriptVariables["test_var2"] = "bleh";
 	}
 
 	public override void _ExitTree()
@@ -90,7 +87,7 @@ public partial class Main : Node2D
 
 		await ScriptManager.RunActionQueue();
 
-		GD.Print(ScriptManager.GetVariable("test_string"));
-		GD.Print(ScriptManager.GetVariable("test_number"));
+		GD.Print(ScriptManager.GetStoryVariable("test_string"));
+		GD.Print(ScriptManager.GetStoryVariable("test_number"));
 	}
 }

@@ -14,10 +14,10 @@ VAR test_number = 42
 ~move_object_to("node2", 0, 0)
 ~print("label", "The end.")
 ~destroy_object("node2")
-{ get_game_var("test_var") == "okay":
+{ get_game_var("test_var1") == "okay":
     ~print("label", "Variable 1 looks okay!")
 }
-{ get_game_var("test_var_wrong") != "okay":
+{ get_game_var("test_var2") != "okay":
     ~print("label", "Variable 2 does not look okay!")
 }
 -> DONE
