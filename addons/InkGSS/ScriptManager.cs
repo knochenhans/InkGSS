@@ -2,28 +2,22 @@ using Godot;
 using GodotInk;
 using System.Threading.Tasks;
 using Godot.Collections;
-using System;
 
 public partial class ScriptManager : GodotObject
 {
 	public Array<AbstractScriptAction> ActionQueue { get; set; } = new Array<AbstractScriptAction>();
+	public Array<ScriptObjectController> ScriptObjects { get; set; } = new Array<ScriptObjectController>();
 
 	public async Task RunActionQueue()
 	{
-		GD.Print($"Running {ActionQueue.Count} actions in queue");
+		Logger.Log($"Running {ActionQueue.Count} actions in queue", Logger.LogTypeEnum.Script);
 		foreach (var action in ActionQueue)
 		{
-			GD.Print($"Running action: {action.GetType()}");
+			Logger.Log($"Running action: {action.GetType()}", Logger.LogTypeEnum.Script);
 			await action.Execute();
 		}
 		ActionQueue.Clear();
 	}
-
-	// External Ink functions
-
-	// Func<string, Variant> InkGetVariable;
-	// Action<string, bool> InkSetVariable;
-	// Func<string, Variant> InkGetScriptVisits;
 
 	public InkStory InkStory { get; set; }
 
@@ -36,22 +30,46 @@ public partial class ScriptManager : GodotObject
 
 	public void BindExternalFunction(string functionName, Callable function)
 	{
-		GD.Print($"Binding external function: {functionName}");
+		Logger.Log($"Binding external function: {functionName}", Logger.LogTypeEnum.Script);
 		ExternalFunctions[functionName] = function;
 		InkStory.BindExternalFunction(functionName, function);
 	}
 
-	public void UnbindExternalFunctions()
+	public void Cleanup()
 	{
+		// Clear the action queue
+		ActionQueue.Clear();
+
+		// Unregister all script objects
+		ScriptObjects.Clear();
+
+		// Unbind all external functions
 		foreach (var externalFunction in ExternalFunctions)
 		{
-			GD.Print($"Unbinding external function: {externalFunction.Key}");
+			Logger.Log($"Unbinding external function: {externalFunction.Key}", Logger.LogTypeEnum.Script);
 			InkStory.UnbindExternalFunction(externalFunction.Key);
 		}
 	}
 
-	public void AddAction(AbstractScriptAction scriptAction)
+	public void RegisterScriptObject(ScriptObjectController scriptObjectController)
+	{
+		ScriptObjects.Add(scriptObjectController);
+
+		Logger.Log($"Registered script object with parent node: {scriptObjectController.Parent.Name}", Logger.LogTypeEnum.Script);
+	}
+
+	public void QueueAction(AbstractScriptAction scriptAction)
 	{
 		ActionQueue.Add(scriptAction);
+	}
+
+	public Variant GetVariable(string variableName)
+	{
+		return InkStory.FetchVariable(variableName);
+	}
+
+	public void SetVariable(string variableName, Variant value)
+	{
+		InkStory.StoreVariable(variableName, value);
 	}
 }

@@ -26,12 +26,12 @@ public partial class ScriptObjectControllerAction : AbstractScriptAction
 
 	public override Task Execute()
 	{
-		GD.Print($"Executing action for {ObjectControllerID}");
+		Logger.Log($"Executing action for {ObjectControllerID}", Logger.LogTypeEnum.Script);
 
 		var scriptObjectController = GetScriptObjectController();
 
 		if (scriptObjectController != null)
-			GD.Print($"Found script object controller for {ObjectControllerID}");
+			Logger.Log($"Found script object controller for {ObjectControllerID}", Logger.LogTypeEnum.Script);
 
 		return Task.CompletedTask;
 	}
@@ -45,7 +45,7 @@ public partial class ScriptActionWait : AbstractScriptAction
 	public ScriptActionWait(float seconds) : base() { Seconds = seconds; }
 	public override Task Execute()
 	{
-		GD.Print($"Waiting for {Seconds} seconds");
+		Logger.Log($"Waiting for {Seconds} seconds", Logger.LogTypeEnum.Script);
 		return Task.Delay(TimeSpan.FromSeconds(Seconds));
 	}
 }
@@ -61,12 +61,11 @@ public partial class ScriptActionPrint : ScriptObjectControllerAction
 
 	public override Task Execute()
 	{
-		GD.Print($"Printing message: {Message}");
+		Logger.Log($"Printing message: {Message}", Logger.LogTypeEnum.Script);
 
 		var scriptObjectController = GetScriptObjectController();
 
-		if (scriptObjectController != null)
-			scriptObjectController.Print(Message);
+		scriptObjectController?.OnPrint(Message);
 
 		return Task.CompletedTask;
 	}
@@ -80,12 +79,12 @@ public partial class ScriptActionMoveObjectBy : ScriptObjectControllerAction
 
 	public async override Task Execute()
 	{
-		GD.Print($"Moving object with ID {ObjectControllerID} by {TargetPositionDelta}");
+		Logger.Log($"Moving object with ID {ObjectControllerID} by {TargetPositionDelta}", Logger.LogTypeEnum.Script);
 
 		var scriptObjectController = GetScriptObjectController();
 
 		if (scriptObjectController != null)
-			await scriptObjectController.MoveBy(TargetPositionDelta);
+			await scriptObjectController.OnMoveBy(TargetPositionDelta);
 	}
 }
 
@@ -97,11 +96,27 @@ public partial class ScriptActionMoveObjectTo : ScriptObjectControllerAction
 
 	public async override Task Execute()
 	{
-		GD.Print($"Moving object with ID {ObjectControllerID} to {TargetPosition}");
+		Logger.Log($"Moving object with ID {ObjectControllerID} to {TargetPosition}", Logger.LogTypeEnum.Script);
 
 		var scriptObjectController = GetScriptObjectController();
 
 		if (scriptObjectController != null)
-			await scriptObjectController.MoveTo(TargetPosition);
+			await scriptObjectController.OnMoveTo(TargetPosition);
+	}
+}
+
+public partial class ScriptActionDestroyObject : ScriptObjectControllerAction
+{
+	public ScriptActionDestroyObject(Array<ScriptObjectController> scriptObjectControllers, string objectControllerID) : base(scriptObjectControllers, objectControllerID) { }
+
+	public override Task Execute()
+	{
+		Logger.Log($"Destroying object with ID {ObjectControllerID}", Logger.LogTypeEnum.Script);
+
+		var scriptObjectController = GetScriptObjectController();
+
+		scriptObjectController?.OnDestroy();
+
+		return Task.CompletedTask;
 	}
 }

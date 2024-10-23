@@ -21,7 +21,7 @@ project/assembly_name="InkGSS"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/GodotInk/plugin.cfg")
+enabled=PackedStringArray("res://addons/GodotInk/plugin.cfg", "res://addons/Logger/plugin.cfg")
 
 [rendering]
 
